@@ -1,0 +1,110 @@
+# Cosmo-PINN configuration (see README.md for every option).
+# Relative data paths are resolved from the repository root.
+# The files shipped in data/ are MOCK data; see DATA.md to download the real ones.
+
+cosmology:
+  H0:         69.5        # initial H0 [km/s/Mpc]
+  OMEGA_M0:   0.30        # initial total matter density
+  R_DRAG:     147.1       # sound horizon at the drag epoch [Mpc]
+  Z_MAX:      2.34        # upper limit of the reconstruction
+  omega_b_h2: 0.0224      # physical baryon density (held fixed)
+
+priors:
+  omega_m0: {trainable: true, prior_mu: 0.30,  prior_sigma: 0.03, lambda_prior: 0.01}
+  H0:       {trainable: true, prior_mu: 68.0,  prior_sigma: 1.0,  lambda_prior: 0.0001}
+  r_drag:   {trainable: true, prior_mu: 147.1, prior_sigma: 2.0,  lambda_prior: 0.0001}
+
+wde_representation:      # network for w_DE(z)
+  hidden_layers: [32, 32]
+  fourier_freqs: 0
+
+network:
+  hidden_layers: [64, 64, 64, 64]
+  fourier_freqs: 4
+
+training:
+  adam_lr:          1.0e-3
+  adam_lr_min:      1.0e-4
+  adam_epochs:      10000
+  scheduler:        "cosine"  # "cosine" | "step"
+  max_grad_norm:    1.0
+  lbfgs_epochs:     200
+  lbfgs_max_iter:   20
+  lbfgs_early_stop: false
+  n_collocation:    1000
+  n_bao_grid:       1000
+  log_every:        500
+  adam_dtype:       "float32"
+  dtype:            "float64"
+
+loss_weights:
+  lambda_pde:              1.0
+  lambda_data:             1.0
+  lambda_bao:              1.0
+  lambda_sn:               1.0
+  lambda_smooth:           5.0e-4
+  lambda_dwde:             5.0e-4
+  lambda_smooth_h:         5.0e-4
+  lambda_dh:               5.0e-4
+  lambda_omega_smooth:     5.0e-4
+  lambda_smooth_max:       1.0e-6
+  lambda_smooth_h_max:     1.0e-5
+  lambda_omega_smooth_max: 1.0e-5
+  lambda_bounds:           10.0
+  lambda_wde_bound:        0.0   # > 0: quintessence, -1 < w_DE < 1
+
+robust:
+  soft_cap_c_sn:  4.0
+  soft_cap_c_bao: 4.0
+
+balancing:
+  mode:                  "gradnorm"   # "gradnorm" | "fixed"
+  gradnorm_every:        500
+  gradnorm_alpha:        0.3
+  gradnorm_lam_lo:       0.5
+  gradnorm_lam_hi:       5.0
+  gradnorm_freeze_after: 3000
+
+cosmic_chronometers:
+  use_cc:         true
+  data_path:      "data/cc/HzTable_MM_BC03.dat"
+  use_cov:        true
+  sys_path:       "data/cc/data_MM20.dat"
+  cov_components: ["imf", "spsooo"]
+
+bao:
+  data_path: "data/bao/desi_gaussian_bao_ALL_GCcomb_mean.txt"   # columns: z  value  DV|DM|DH_over_rs
+  cov_path:  "data/bao/desi_gaussian_bao_ALL_GCcomb_cov.txt"
+
+supernovae:
+  dataset: "pantheon_plus"   # pantheon_plus | pantheon_plus_sh0es | union3 | des_dovekie | none
+
+output:
+  save_dir: "results/pantheon_plus"
+
+bayesian:
+  use_hmc:            true
+  scope:              "wde"     # scalars | wnet | wde | full
+  dtype:              "float64"
+  num_warmup:         3000
+  num_samples:        3000
+  num_chains:         4
+  vectorise_chains:   true
+  log_every:          100
+  target_accept:      0.85
+  max_tree_depth:     10
+  dense_mass:         true
+  init_step_size:     0.02
+  jitter:             1.0e-2
+  seed:               42
+  weight_prior_sigma: 5.0
+  use_cc:             true
+  use_bao:            true
+  use_sn:             true
+  use_pde:            true
+  pde_sigma:          0.03
+  pde_n_colloc:       200
+  wnet_prior_sigma:   0.16      # LCDM-centred prior on the w_DE network head (<= 0: MAP ridge)
+  band_n_z:           500
+  thin:               1
+  save_chain:         true
