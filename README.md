@@ -22,11 +22,6 @@ fitted together with the network. Training (Adam, then L-BFGS) is followed by Ha
 Monte Carlo (NUTS), which gives credible bands on $w_{\rm DE}(z)$, $H(z)$ and the other
 reconstructed quantities.
 
-The code is written in [JAX](https://github.com/jax-ml/jax) with
-[Equinox](https://github.com/patrick-kidger/equinox),
-[Optax](https://github.com/google-deepmind/optax) and
-[BlackJAX](https://github.com/blackjax-devs/blackjax).
-
 ## Quick start
 
 ```bash
